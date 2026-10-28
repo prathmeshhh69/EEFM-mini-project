@@ -10,6 +10,7 @@ import {
   YAxis,
 } from 'recharts'
 import './App.css'
+import { apiUrl } from './api'
 import { Button } from './components/ui/button'
 import { formatCurrency, marketItems } from './marketData'
 import { getPattern, useMarket, type SimulatedStock } from './marketEngine'
@@ -128,7 +129,7 @@ function SentimentAnalyzer() {
     if (trimmed.length > maxLength) { setState({ status: 'error', text: `Keep the text under ${maxLength.toLocaleString()} characters.` }); setResult(null); return }
     setState({ status: 'loading', text: '' }); setResult(null)
     try {
-      const response = await fetch('/api/ai/sentiment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: trimmed }) })
+      const response = await fetch(apiUrl('/api/ai/sentiment'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: trimmed }) })
       const data = await response.json() as { sentiment?: string; error?: string }
       if (!response.ok || typeof data.sentiment !== 'string') throw new Error(data.error || 'Sentiment analysis could not be completed.')
       const parsed = parseSentimentResult(data.sentiment)
@@ -179,7 +180,7 @@ function AIAnalysis({ stocks }: { stocks: SimulatedStock[] }) {
     setAnalysis({ status: 'loading', text: '' })
     setStage(0)
     try {
-      const response = await fetch('/api/ai/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ symbol, stock: selected }) })
+      const response = await fetch(apiUrl('/api/ai/analyze'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ symbol, stock: selected }) })
       const data = await response.json() as { analysis?: string; error?: string }
       if (!response.ok || !data.analysis) throw new Error(data.error || 'The analysis could not be generated.')
       if (!parseAnalysisResult(data.analysis)) throw new Error('Gemini returned an unexpected response. Please try again.')
@@ -208,7 +209,7 @@ function MarketIntelligence({ stocks }: { stocks: SimulatedStock[] }) {
     event.preventDefault()
     setState({ status: 'loading', text: '' }); setBrief(null)
     try {
-      const response = await fetch('/api/ai/market-brief', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ symbol, pricePoints: recent, changePercent: selected.change, trend: trendSignal, volatility, ...(headline.trim() ? { headline: headline.trim() } : {}) }) })
+      const response = await fetch(apiUrl('/api/ai/market-brief'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ symbol, pricePoints: recent, changePercent: selected.change, trend: trendSignal, volatility, ...(headline.trim() ? { headline: headline.trim() } : {}) }) })
       const data = await response.json() as { brief?: string; error?: string }
       if (!response.ok || typeof data.brief !== 'string') throw new Error(data.error || 'The market brief could not be generated.')
       setBrief(JSON.parse(data.brief) as MarketBrief); setState({ status: 'success', text: '' })

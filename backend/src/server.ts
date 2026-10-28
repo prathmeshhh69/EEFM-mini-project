@@ -6,7 +6,15 @@ import { GoogleGenAI } from '@google/genai'
 const app = express()
 const port = Number(process.env.PORT ?? 4000)
 const modelName = process.env.GEMINI_MODEL || 'gemini-2.5-flash'
-const allowedOrigins = new Set(['http://localhost:5173', 'http://127.0.0.1:5173', process.env.FRONTEND_ORIGIN].filter(Boolean))
+const isProduction = process.env.NODE_ENV === 'production'
+const configuredOrigins = [
+  process.env.FRONTEND_ORIGIN,
+  ...(process.env.FRONTEND_ORIGINS ?? '').split(','),
+].map((origin) => origin?.trim() ?? '').filter(Boolean)
+const allowedOrigins = new Set([
+  ...(isProduction ? [] : ['http://localhost:5173', 'http://127.0.0.1:5173']),
+  ...configuredOrigins,
+])
 
 const supportedStocks = {
   RELIANCE: { symbol: 'RELIANCE', name: 'Reliance Industries', price: 2941.2, change: '+1.24%', positive: true },
